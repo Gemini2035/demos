@@ -8,11 +8,178 @@
 </head>
 
 <body>
-    <section class="main-container">
-        <model id="model" src="assets/ball_baseball_realistic.usdz">
-            <p>something error when loading the model</p>
-        </model>
+    <section>
+        <h1>Basic Usage</h1>
+        <div>
+            <model src="assets/ball_baseball_realistic.usdz">
+                <p>This model tag is only supported in Safari</p>
+            </model>
+        </div>
+    </section>
+
+    <section>
+        <h1>Setting Background</h1>
+        <div>
+            <model class="background-model" src="assets/ball_baseball_realistic.usdz">
+                <p>This model tag is only supported in Safari</p>
+            </model>
+        </div>
+    </section>
+
+    <section>
+        <h1>Loading Promise</h1>
+        <div>
+            <p class="state-info">Loading model...</p>
+            <model id="model-1" src="assets/ball_baseball_realistic.usdz">
+                <p>This model tag is only supported in Safari</p>
+            </model>
+        </div>
+    </section>
+
+    <section>
+        <h1>Orbit Mode</h1>
+        <div>
+            <model src="assets/ball_baseball_realistic.usdz" stagemode="orbit">
+                <p>This model tag is only supported in Safari</p>
+            </model>
+        </div>
+    </section>
+
+    <section>
+        <h1>Transformer</h1>
+        <div>
+            <model id="transformer-model" src="assets/ball_baseball_realistic.usdz">
+                <p>This model tag is only supported in Safari</p>
+            </model>
+            <div>
+                <button id="button-side">Side</button>
+                <button id="button-reset">Reset</button>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h1>Animation</h1>
+        <div>
+            <model id="animation-model" src="assets/ball_baseball_realistic.usdz">
+                <p>This model tag is only supported in Safari</p>
+            </model>
+            <div>
+                <button id="animation-button-side">Side</button>
+                <button id="animation-button-reset">Reset</button>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h1>AR</h1>
+        <a rel="ar" href="assets/ball_baseball_realistic.usdz">
+            <model id="boot" src="assets/ball_baseball_realistic.usdz"></model>
+        </a>
     </section>
 </body>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .background-model {
+        background-color: #fff;
+    }
+</style>
+
+<script type="text/javascript">
+
+    // Loading Promise
+    const baseBallModel_1 = document.getElementById('model-1');
+
+    baseBallModel_1.ready.then(() => {
+        document.querySelector('.state-info').style.display = 'none';
+    }).catch((error) => {
+        console.error('Error loading model:', error);
+        document.querySelector('.state-info').textContent = 'Error loading model.';
+    })
+
+    // Transformer
+    const TransformerModel = document.getElementById("transformer-model");
+    let initialTransform;
+
+    const rotateFromInitial = (rotationY) => {
+        if (!initialTransform) return;
+
+        const transform = new DOMMatrix(initialTransform);
+        transform.rotateSelf(0, rotationY, 0);
+        TransformerModel.entityTransform = transform;
+    };
+
+    TransformerModel.ready.then(() => {
+        initialTransform = new DOMMatrix(TransformerModel.entityTransform);
+    });
+
+    document.getElementById("button-side")
+        .addEventListener("click", () => {
+            rotateFromInitial(135);
+        });
+
+    document.getElementById("button-reset")
+        .addEventListener("click", () => {
+            if (!initialTransform) return;
+
+            TransformerModel.entityTransform = new DOMMatrix(initialTransform);
+        });
+
+    // Animation
+    const animationModel = document.getElementById("animation-model");
+    const duration = 500;
+    let animationInitialTransform;
+    let currentAngle = 0;
+    let animationId = null;
+
+    animationModel.ready.then(() => {
+        animationInitialTransform = new DOMMatrix(animationModel.entityTransform);
+    });
+
+    const rotateAnimationFromInitial = (rotationY) => {
+        if (!animationInitialTransform) return;
+
+        const transform = new DOMMatrix(animationInitialTransform);
+        transform.rotateSelf(0, rotationY, 0);
+        animationModel.entityTransform = transform;
+    };
+
+    function animateTo(targetAngle) {
+        if (!animationInitialTransform) return;
+        if (animationId) cancelAnimationFrame(animationId);
+        const startAngle = currentAngle;
+        const startTime = performance.now();
+
+        function step(now) {
+            const progress = Math.min((now - startTime) / duration, 1);
+            const ease = 1 - Math.pow(1 - progress, 3);
+            currentAngle = startAngle + (targetAngle - startAngle) * ease;
+            rotateAnimationFromInitial(currentAngle);
+            if (progress < 1) animationId = requestAnimationFrame(step);
+        }
+
+        requestAnimationFrame(step);
+    }
+
+    document.getElementById("animation-button-side").addEventListener("click", () => animateTo(135));
+    document.getElementById("animation-button-reset").addEventListener("click", () => animateTo(0));
+
+
+</script>
 
 </html>
